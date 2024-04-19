@@ -6,16 +6,30 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\Services\UserService;
 use App\Services\PersonService;
+use App\Services\RoleService;
 use App\Http\Requests\StoreUserRequest;
 use App\Models\User;
 use App\Models\Person;
 
 class UserController extends CRUDController 
 {
-    function __construct(UserService $userService, PersonService $personService)
+    const VIEW_NAME = 'users';
+
+    function __construct (
+        UserService $userService, 
+        PersonService $personService,
+        RoleService $roleService
+    ) 
     {
-        parent::__construct($userService, 'users');
+        parent::__construct($userService, self::VIEW_NAME);
         $this->personService = $personService;
+        $this->roleService = $roleService;
+    }
+
+    public function create(): View
+    {
+        $roles = $this->roleService->getAll();
+        return view(SELF::VIEW_NAME.'.'.'create', compact('roles'));
     }
 
     public function storeUser(StoreUserRequest $request): RedirectResponse
@@ -26,6 +40,7 @@ class UserController extends CRUDController
 
         $person = new Person();
 
+        $user->roles()->attach($request->input('roles'));
         $user->person()->save($person);
         return redirect()->route('users.index');
     }
@@ -40,7 +55,7 @@ class UserController extends CRUDController
         return parent::edit($user);
     }
 
-    public function updateUser(StoreUserRequest $request, string $id): RedirectResponse
+    public function updateUser(StoreUserRequest $request, int $id): RedirectResponse
     {
         $this->service->update($request->only(['email', 'password', 'is_active']), $id);
         return redirect()->route('person.index')->with('success', 'Person updated');

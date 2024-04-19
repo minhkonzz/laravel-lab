@@ -6,7 +6,7 @@ use App\Repositories\CountryRepository;
 
 class CountryService extends BaseService
 {
-    public function __construct(CountryRepository $repository)
+    function __construct(CountryRepository $repository)
     {
         $this->repository = $repository;
     }

@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use App\Models\User;
+use App\Models\Company;
 
 return new class extends Migration
 {
@@ -19,7 +20,7 @@ return new class extends Migration
             $table->date('birthdate')->nullable();
             $table->string('phone_number')->nullable()->unique();
             $table->string('address')->nullable();
-            $table->foreignIdFor(User::class)->constained()->onDelete('cascade');
+            $table->foreignId('user_id')->constained('users')->onDelete('cascade')->unique();
             $table->foreignId('company_id')->nullable()->constrained('companies');
             $table->timestamps();
         });

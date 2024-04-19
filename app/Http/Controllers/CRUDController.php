@@ -12,7 +12,7 @@ class CRUDController extends Controller
     protected $service;
     protected $viewName;
 
-    public function __construct($service, $viewName)
+    function __construct($service, $viewName)
     {
         $this->service = $service;
         $this->viewName = $viewName;
@@ -45,13 +45,13 @@ class CRUDController extends Controller
         return view($this->viewName.'.'.'update', compact('item'));
     }
 
-    public function update(Request $request, string $id): RedirectResponse
+    public function update(Request $request, int $id): RedirectResponse
     {
         $this->service->update($request->all(), $id);
         return redirect()->route($this->viewName.'.'.'index');
     }
 
-    public function destroy(string $id): RedirectResponse
+    public function destroy(int $id): RedirectResponse
     {
         $this->service->delete($id);
         return redirect()->route($this->viewName.'.'.'index');

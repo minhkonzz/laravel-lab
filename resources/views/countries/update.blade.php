@@ -1,56 +1,59 @@
-@extends('layout')
+<x-app-layout>
+    <x-slot name="header">
+        <a href="{{ route('countries.index') }}">&larr; Back</a>
+    </x-slot>
 
-@section('content')
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    <section>
+                        <header>
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Update country') }}
+                            </h2>
 
-<div class="row justify-content-center mt-3">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <div class="float-start">
-                    Edit country
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ __("Update country information") }}
+                            </p>
+                        </header>
+                        <form action="{{ route('countries.update', $item->id) }}" method="POST" class="mt-6 space-y-6">
+                            @csrf
+                            @method("PUT")
+                            <div>
+                                <x-input-label for="code" :value="__('Code')" />
+                                <x-text-input id="code" name="code" type="text" class="mt-1 block w-full" :value="$item->code" required autofocus autocomplete="code" />
+                                <x-input-error class="mt-2" :messages="$errors->get('code')" />
+                            </div>
+                            <div>
+                                <x-input-label for="name" :value="__('Name')" />
+                                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="$item->name" required autofocus autocomplete="name" />
+                                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+                            </div>
+                            <div>
+                                <x-input-label for="description" :value="__('Description')" />
+                                <x-text-input id="description" name="description" type="text" class="mt-1 block w-full" :value="$item->description" autofocus autocomplete="description" />
+                                <x-input-error class="mt-2" :messages="$errors->get('description')" />
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <x-primary-button>{{ __('Update') }}</x-primary-button>
+
+                                @if (session('status') === 'country-updated')
+                                    <p
+                                        x-data="{ show: true }"
+                                        x-show="show"
+                                        x-transition
+                                        x-init="setTimeout(() => show = false, 2000)"
+                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                    >{{ __('Updated country.') }}</p>
+                                @endif
+                            </div>
+                        </form>
+                    </section>
                 </div>
-                <div class="float-end">
-                    <a href="{{ route('countries.index') }}" class="btn btn-primary btn-sm">&larr; Back</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('countries.update', $item->id) }}" method="post">
-                    @csrf
-                    @method("PUT")
-                    <div class="mb-3 row">
-                        <label for="code" class="col-md-4 col-form-label text-md-end text-start">Code</label>
-                        <div class="col-md-6">
-                          <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ $item->code }}">
-                            @if ($errors->has('code'))
-                                <span class="text-danger">{{ $errors->first('code') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="name" class="col-md-4 col-form-label text-md-end text-start">Name</label>
-                        <div class="col-md-6">
-                          <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ $item->name }}">
-                            @if ($errors->has('name'))
-                                <span class="text-danger">{{ $errors->first('name') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="description" class="col-md-4 col-form-label text-md-end text-start">Description</label>
-                        <div class="col-md-6">
-                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description">{{ $item->description }}</textarea>
-                            @if ($errors->has('description'))
-                                <span class="text-danger">{{ $errors->first('description') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <input type="submit" class="col-md-3 offset-md-5 btn btn-primary" value="Update">
-                    </div>
-                </form>
             </div>
         </div>
-    </div>    
-</div>
-    
-@endsection
+    </div>
+
+</x-app-layout>

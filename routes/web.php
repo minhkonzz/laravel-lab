@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\PersonController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,5 +56,21 @@ Route::get('/create-person', [PersonController::class, 'create'])->name('persons
 Route::post('/persons', [PersonController::class, 'storePerson'])->name('persons.store');
 Route::put('/persons/{person}', [PersonController::class, 'updatePerson'])->name('persons.update');
 Route::delete('/persons/{person}', [PersonController::class, 'destroy'])->name('persons.destroy');
+
+Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
+Route::get('/companies/{company}', [CompanyController::class, 'showCompany'])->name('companies.show');
+Route::get('/companies/{company}/edit', [CompanyController::class, 'editCompany'])->name('companies.edit');
+Route::get('/create-company', [CompanyController::class, 'create'])->name('companies.create');
+Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+Route::put('/companies/{company}', [CompanyController::class, 'update'])->name('companies.update');
+Route::delete('/companies/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+
+Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+Route::get('/roles/{role}', [RoleController::class, 'showRole'])->name('roles.show');
+Route::get('/roles/{role}/edit', [RoleController::class, 'editRole'])->name('roles.edit');
+Route::get('/create-role', [RoleController::class, 'create'])->name('roles.create');
+Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
 require __DIR__.'/auth.php';

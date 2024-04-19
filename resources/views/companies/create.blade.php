@@ -1,57 +1,57 @@
-@extends('layout')
+<x-app-layout>
+    <x-slot name="header">
+        <a href="{{ route('companies.index') }}">&larr; Back</a>
+    </x-slot>
 
-@section('content')
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    <section>
+                        <header>
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Create new company') }}
+                            </h2>
 
-<div class="row justify-content-center mt-3">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <div class="float-start">
-                    Add new company
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ __("Each company need have these information") }}
+                            </p>
+                        </header>
+                        <form action="{{ route('companies.store') }}" method="POST" class="mt-6 space-y-6">
+                            @csrf
+                            <div>
+                                <x-input-label for="name" :value="__('Name')" />
+                                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name')" required autofocus autocomplete="name" />
+                                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+                            </div>
+                            <div>
+                                <x-input-label for="code" :value="__('Code')" />
+                                <x-text-input id="code" name="code" type="text" class="mt-1 block w-full" :value="old('code')" required autofocus autocomplete="code" />
+                                <x-input-error class="mt-2" :messages="$errors->get('code')" />
+                            </div>
+                            <div>
+                                <x-input-label for="address" :value="__('Address')" />
+                                <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" :value="old('address')" autofocus autocomplete="address" />
+                                <x-input-error class="mt-2" :messages="$errors->get('address')" />
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <x-primary-button>{{ __('Save') }}</x-primary-button>
+
+                                @if (session('status') === 'country-created')
+                                    <p
+                                        x-data="{ show: true }"
+                                        x-show="show"
+                                        x-transition
+                                        x-init="setTimeout(() => show = false, 2000)"
+                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                    >{{ __('Created new country.') }}</p>
+                                @endif
+                            </div>
+                        </form>
+                    </section>
                 </div>
-                <div class="float-end">
-                    <a href="{{ route('companies.index') }}" class="btn btn-primary btn-sm">&larr; Back</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('companies.store') }}" method="POST">
-                    @csrf
-                    <div class="mb-3 row">
-                        <label for="name" class="col-md-4 col-form-label text-md-end text-start">Name</label>
-                        <div class="col-md-6">
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}">
-                            @if ($errors->has('name'))
-                                <span class="text-danger">{{ $errors->first('name') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="code" class="col-md-4 col-form-label text-md-end text-start">code</label>
-                        <div class="col-md-6">
-                            <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ old('code') }}">
-                            @if ($errors->has('code'))
-                                <span class="text-danger">{{ $errors->first('code') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="address" class="col-md-4 col-form-label text-md-end text-start">Address</label>
-                        <div class="col-md-6">
-                            <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" value="{{ old('address') }}">
-                            @if ($errors->has('address'))
-                                <span class="text-danger">{{ $errors->first('address') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <input type="submit" class="col-md-3 offset-md-5 btn btn-primary" value="Add company">
-                    </div>
-                </form>
             </div>
         </div>
-    </div>    
-</div>
-    
-@endsection
+    </div>
 
-
+</x-app-layout>

@@ -1,41 +1,45 @@
-@extends('layout')
+<x-app-layout>
+    <x-slot name="header">
+        <a href="{{ route('countries.index') }}">&larr; Back</a>
+    </x-slot>
 
-@section('content')
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    <section>
+                        <div>
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Code') }}
+                            </h2>
 
-<div class="row justify-content-center mt-3">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <div class="float-start">
-                    Country Information
-                </div>
-                <div class="float-end">
-                    <a href="{{ route('countries.index') }}" class="btn btn-primary btn-sm">&larr; Back</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <label for="code" class="col-md-4 col-form-label text-md-end text-start"><strong>Code:</strong></label>
-                    <div class="col-md-6" style="line-height: 35px;">
-                        {{ $item->code }}
-                    </div>
-                </div>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->code }}
+                            </p>
+                        </div>
+                        <div class="mt-8">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Name') }}
+                            </h2>
 
-                <div class="row">
-                    <label for="name" class="col-md-4 col-form-label text-md-end text-start"><strong>Name:</strong></label>
-                    <div class="col-md-6" style="line-height: 35px;">
-                        {{ $item->name }}
-                    </div>
-                </div>
-                <div class="row">
-                    <label for="description" class="col-md-4 col-form-label text-md-end text-start"><strong>Description:</strong></label>
-                    <div class="col-md-6" style="line-height: 35px;">
-                        {{ $item->description }}
-                    </div>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->name }}
+                            </p>
+                        </div>
+                        <div class="mt-8">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Description') }}
+                            </h2>
+
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->description }}
+                            </p>
+                        </div>
+                        
+                    </section>
                 </div>
             </div>
         </div>
-    </div>    
-</div>
-    
-@endsection
+    </div>
+
+</x-app-layout>

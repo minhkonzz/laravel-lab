@@ -6,7 +6,7 @@ use App\Models\Country;
 
 class CountryRepository extends BaseRepository
 {
-    public function __construct(Country $model)
+    function __construct(Country $model)
     {
         parent::__construct($model);
     }

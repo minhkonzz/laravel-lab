@@ -9,7 +9,7 @@ abstract class BaseService
 {
     protected $repository;
 
-    public function __construct($repository)
+    function __construct($repository)
     {
         $this->repository = $repository;
     }
@@ -19,7 +19,7 @@ abstract class BaseService
         return $this->repository->getAll();
     }
 
-    public function getById(string $id): ?Model
+    public function getById(int $id): ?Model
     {
         return $this->repository->getById($id);
     }
@@ -29,12 +29,12 @@ abstract class BaseService
         return $this->repository->create($data);
     }
 
-    public function update(array $data, string $id): bool
+    public function update(array $data, int $id): bool
     {
         return $this->repository->update($data, $id);
     }
 
-    public function delete(string $id): bool
+    public function delete(int $id): bool
     {
         return $this->repository->delete($id);
     }

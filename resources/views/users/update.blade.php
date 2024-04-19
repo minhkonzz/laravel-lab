@@ -1,47 +1,64 @@
-@extends('layout')
+<x-app-layout>
+    <x-slot name="header">
+        <a href="{{ route('users.index') }}">&larr; Back</a>
+    </x-slot>
 
-@section('content')
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <div class="max-w-xl">
+                    <section>
+                        <header>
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Update user') }}
+                            </h2>
 
-<div class="row justify-content-center mt-3">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <div class="float-start">
-                    Update user
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ __("Update your user information") }}
+                            </p>
+                        </header>
+                        <form action="{{ route('users.update', $item->id) }}" method="POST" class="mt-6 space-y-6">
+                            @csrf
+                            @method("PUT")
+                            <div>
+                                <x-input-label for="name" :value="__('Name')" />
+                                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="$item->name" autofocus autocomplete="name" />
+                                <x-input-error class="mt-2" :messages="$errors->get('name')" />
+                            </div>
+                            <div>
+                                <x-input-label for="email" :value="__('Email')" />
+                                <x-text-input id="email" name="email" type="text" class="mt-1 block w-full" :value="$item->email" required autofocus autocomplete="email" />
+                                <x-input-error class="mt-2" :messages="$errors->get('email')" />
+                            </div>
+                            <div>
+                                <x-input-label for="password" :value="__('Password')" />
+                                <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" :value="$item->password" required autofocus autocomplete="password" />
+                                <x-input-error class="mt-2" :messages="$errors->get('password')" />
+                            </div>
+                            <div>
+                                <x-input-label for="roles" :value="__('Roles')" />
+                                <x-text-input id="roles" name="roles" type="hidden" class="mt-1 block w-full" :value="$item->roles" />
+                                <x-multiple-select name="roles" :options="$roles" :selected="$selectedRoles"></x-multiple-select>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <x-primary-button>{{ __('Update') }}</x-primary-button>
+
+                                @if (session('status') === 'user-updated')
+                                    <p
+                                        x-data="{ show: true }"
+                                        x-show="show"
+                                        x-transition
+                                        x-init="setTimeout(() => show = false, 2000)"
+                                        class="text-sm text-gray-600 dark:text-gray-400"
+                                    >{{ __('Updated user.') }}</p>
+                                @endif
+                            </div>
+                        </form>
+                    </section>
                 </div>
-                <div class="float-end">
-                    <a href="{{ route('users.index') }}" class="btn btn-primary btn-sm">&larr; Back</a>
-                </div>
-            </div>
-            <div class="card-body">
-                <form action="{{ route('users.update', $item->id) }}" method="POST">
-                    @csrf
-                    @method("PUT")
-                    <div class="mb-3 row">
-                        <label for="name" class="col-md-4 col-form-label text-md-end text-start">Name</label>
-                        <div class="col-md-6">
-                          <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ $item->name }}">
-                            @if ($errors->has('name'))
-                                <span class="text-danger">{{ $errors->first('name') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <label for="email" class="col-md-4 col-form-label text-md-end text-start">Email</label>
-                        <div class="col-md-6">
-                          <input type="text" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ $item->email }}">
-                            @if ($errors->has('email'))
-                                <span class="text-danger">{{ $errors->first('email') }}</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="mb-3 row">
-                        <input type="submit" class="col-md-3 offset-md-5 btn btn-primary" value="Update">
-                    </div>
-                </form>
             </div>
         </div>
-    </div>    
-</div>
-    
-@endsection
+    </div>
+
+</x-app-layout>

@@ -30,7 +30,7 @@ class CountryController extends CRUDController
         return parent::edit($country);
     }
 
-    public function updateCountry(StoreCountryRequest $request, string $id): RedirectResponse
+    public function updateCountry(StoreCountryRequest $request, int $id): RedirectResponse
     {
         return parent::update($request, $id);
     }

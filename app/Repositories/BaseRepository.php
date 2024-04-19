@@ -10,7 +10,7 @@ abstract class BaseRepository
 {
     protected $model;
 
-    public function __construct(Model $model)
+    function __construct(Model $model)
     {
         $this->model = $model;
     }
@@ -20,7 +20,7 @@ abstract class BaseRepository
         return $this->model->all();
     }
 
-    public function getById(string $id): ?Model
+    public function getById(int $id): ?Model
     {
         return $this->model->find($id);
     }
@@ -30,12 +30,12 @@ abstract class BaseRepository
         return $this->model->create($data);
     }
 
-    public function update(array $data, string $id): bool
+    public function update(array $data, int $id): bool
     {
         return $this->model->find($id)->update($data);
     }
 
-    public function delete(string $id): bool
+    public function delete(int $id): bool
     {
         return $this->model->find($id)->delete();
     }   

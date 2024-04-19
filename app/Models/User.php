@@ -49,7 +49,7 @@ class User extends Authenticatable
 
     public function roles(): BelongsToMany
     {
-       $this->belongsToMany(Role::class); 
+       return $this->belongsToMany(Role::class); 
     }
 
     public function person(): HasOne
