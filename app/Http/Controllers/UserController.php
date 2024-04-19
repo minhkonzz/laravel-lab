@@ -8,6 +8,7 @@ use App\Services\UserService;
 use App\Services\PersonService;
 use App\Services\RoleService;
 use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Models\Person;
 
@@ -29,20 +30,20 @@ class UserController extends CRUDController
     public function create(): View
     {
         $roles = $this->roleService->getAll();
-        return view(SELF::VIEW_NAME.'.'.'create', compact('roles'));
+        return view(self::VIEW_NAME.'.'.'create', compact('roles'));
     }
 
     public function storeUser(StoreUserRequest $request): RedirectResponse
     {   
         $user = $this->service->create(
-            $request->only(['name', 'email', 'password', 'is_active'])
+            $request->only(['name', 'email', 'password'])
         );
 
         $person = new Person();
 
         $user->roles()->attach($request->input('roles'));
         $user->person()->save($person);
-        return redirect()->route('users.index');
+        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-created');
     }
 
     public function showUser(User $user): View
@@ -52,12 +53,18 @@ class UserController extends CRUDController
 
     public function editUser(User $user): View
     {
-        return parent::edit($user);
+        $viewData = clone $user; 
+        $viewData->roles = $this->roleService->getAll();
+        $viewData->selectedRoleIds = array_column($user->roles->toArray(), 'id');
+        return parent::edit($viewData);
     }
 
-    public function updateUser(StoreUserRequest $request, int $id): RedirectResponse
+    public function updateUser(UpdateUserRequest $request, int $id): RedirectResponse
     {
-        $this->service->update($request->only(['email', 'password', 'is_active']), $id);
-        return redirect()->route('person.index')->with('success', 'Person updated');
+        $this->service->update($request->only(['name', 'email']), $id);
+        $selectedRoles = $request->input('roles');
+        $user = $this->service->getById($id);
+        $user->roles()->sync($selectedRoles);
+        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-updated');
     }
 }

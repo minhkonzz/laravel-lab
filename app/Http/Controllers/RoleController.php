@@ -9,9 +9,11 @@ use App\Models\Role;
 
 class RoleController extends CRUDController
 {
+    const VIEW_NAME = 'roles';
+
     function __construct(RoleService $service)
     {
-        parent::__construct($service, 'roles');
+        parent::__construct($service, self::VIEW_NAME);
     }
 
     public function showRole(Role $role): View

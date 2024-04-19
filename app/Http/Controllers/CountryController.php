@@ -10,9 +10,11 @@ use App\Models\Country;
 
 class CountryController extends CRUDController
 {
+    const VIEW_NAME = 'countries';
+
     function __construct(CountryService $service)
     {
-        parent::__construct($service, 'countries');
+        parent::__construct($service, self::VIEW_NAME);
     }
 
     public function storeCountry(StoreCountryRequest $request): RedirectResponse

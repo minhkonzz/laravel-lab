@@ -26,7 +26,7 @@ class PersonController extends CRUDController
     public function create(): View
     {
         $companies = $this->companyService->getAll();
-        return view('persons.create', compact('companies'));
+        return view(self::VIEW_NAME, compact('companies'));
     }
 
     public function storePerson(StorePersonRequest $request): RedirectResponse
@@ -44,7 +44,7 @@ class PersonController extends CRUDController
         $person->company_id = intval($request->input('company'));
         $user->person()->save($person);
         $user->save();
-        return redirect()->route('persons.index')->with('success', 'person-created');
+        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-created');
     }
 
     public function showPerson(Person $person): View
@@ -67,6 +67,6 @@ class PersonController extends CRUDController
             'address',
         ]), $id);
 
-        return redirect()->route('persons.index')->with('success', 'person-updated');
+        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-updated');
     }
 }

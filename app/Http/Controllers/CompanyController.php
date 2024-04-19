@@ -9,9 +9,11 @@ use App\Models\Company;
 
 class CompanyController extends CRUDController
 {
+    const VIEW_NAME = 'companies';
+
     function __construct(CompanyService $service)
     {
-        parent::__construct($service, 'companies');
+        parent::__construct($service, self::VIEW_NAME);
     }
     
     public function showCompany(Company $company): View

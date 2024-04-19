@@ -32,13 +32,11 @@
                             </div>
                             <div>
                                 <x-input-label for="password" :value="__('Password')" />
-                                <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" :value="$item->password" required autofocus autocomplete="password" />
-                                <x-input-error class="mt-2" :messages="$errors->get('password')" />
+                                <x-text-input disabled readonly id="password" name="password" type="password" class="mt-1 block w-full" :value="$item->password" required autofocus autocomplete="password" />
                             </div>
                             <div>
                                 <x-input-label for="roles" :value="__('Roles')" />
-                                <x-text-input id="roles" name="roles" type="hidden" class="mt-1 block w-full" :value="$item->roles" />
-                                <x-multiple-select name="roles" :options="$roles" :selected="$selectedRoles"></x-multiple-select>
+                                <x-dropdown-search-checkbox :options="$item->roles" :selectedIds="$item->selectedRoleIds" />
                             </div>
 
                             <div class="flex items-center gap-4">
