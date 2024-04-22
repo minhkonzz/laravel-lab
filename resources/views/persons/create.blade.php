@@ -44,6 +44,7 @@
                                 <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" :value="old('address')" autofocus autocomplete="address" />
                                 <x-input-error class="mt-2" :messages="$errors->get('address')" />
                             </div>
+
                             <div class="flex items-center">
                                 <x-input-label for="company" :value="__('Company')" />
                                 <x-dropdown-search placeholder="Select company" :options="$companies" />

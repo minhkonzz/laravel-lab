@@ -36,7 +36,8 @@
         </div>
         <ul class="px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200">
             @foreach ($options as $i => $option)
-                <li class="cursor-pointer flex items-center ps-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" @click="selectedName = '{{ $option['name'] }}'; {{ $onSelect($option['id']) }}">
+                <li class="cursor-pointer flex items-center ps-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" 
+                    @click="selectedName = '{{ $option['name'] }}'; {{ isset($onSelect) ? $onSelect . '(' . $option['id'] . ')' : '' }}">
                     <input {{ isset($selectedId) && $selectedId === $option['id'] ? 'checked' : '' }} id="radio-item-{{ $i + 1 }}" type="radio" name="company" value="{{ base64_encode($option['id']) }}">
                     <label for="radio-item-{{ $i + 1 }}" class="py-2 ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $option['name'] }}</label>
                 </li>

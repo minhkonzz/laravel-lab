@@ -27,7 +27,18 @@ class ProjectController extends CRUDController
 
     public function storeProject(Request $request): RedirectResponse
     {
-        $project = $this->service->create($request->only(['code', 'name', 'description', 'company_id']));
+        $company_id = intval(base64_decode($request->input('company')));
+        $company_code = $request->input('code');
+        $company_name = $request->input('name');
+        $company_description = $request->input('description');
+
+        $project = $this->service->create([
+            'code'        => $company_code,
+            'name'        => $company_name,
+            'description' => $company_description,
+            'company_id'  => $company_id
+        ]);
+
         $personIds = $request->input('person_ids', []);
         $project->person()->sync($personIds);
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-created');

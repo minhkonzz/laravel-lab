@@ -13,6 +13,12 @@ class Project extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'code', 
+        'name',
+        'description'
+    ];
+
     public function person(): BelongsToMany
     {
         return $this->belongsTo(Person::class);
