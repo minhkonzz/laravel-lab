@@ -41,7 +41,7 @@ class UserController extends CRUDController
 
         $person = new Person();
 
-        $user->roles()->attach($request->input('roles'));
+        $user->roles()->attach($request->input('selected'));
         $user->person()->save($person);
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-created');
     }
@@ -61,9 +61,8 @@ class UserController extends CRUDController
 
     public function updateUser(UpdateUserRequest $request, int $id): RedirectResponse
     {
-        $this->service->update($request->only(['name', 'email']), $id);
-        $selectedRoles = $request->input('roles');
-        $user = $this->service->getById($id);
+        $user = $this->service->update($request->only(['name', 'email']), $id);
+        $selectedRoles = $request->input('selected');
         $user->roles()->sync($selectedRoles);
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-updated');
     }

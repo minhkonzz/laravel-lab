@@ -16,7 +16,11 @@ class PersonController extends CRUDController
 {
     const VIEW_NAME = 'persons';
 
-    function __construct(PersonService $personService, UserService $userService, CompanyService $companyService)
+    function __construct(
+        PersonService $personService, 
+        UserService $userService, 
+        CompanyService $companyService
+    )
     {
         parent::__construct($personService, self::VIEW_NAME);
         $this->userService = $userService;
@@ -26,7 +30,7 @@ class PersonController extends CRUDController
     public function create(): View
     {
         $companies = $this->companyService->getAll();
-        return view(self::VIEW_NAME, compact('companies'));
+        return view(self::VIEW_NAME.'.'.'create', compact('companies'));
     }
 
     public function storePerson(StorePersonRequest $request): RedirectResponse
@@ -40,8 +44,8 @@ class PersonController extends CRUDController
             'address',
         ]));
 
-        // $person->company_id = intval(base64_decode($request->input('company')));
-        $person->company_id = intval($request->input('company'));
+        $company_id = intval(base64_decode($request->input('company')));
+        $person->company()->associate($company_id);
         $user->person()->save($person);
         $user->save();
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-created');
@@ -54,12 +58,14 @@ class PersonController extends CRUDController
 
     public function editPerson(Person $person): View
     {
-        return parent::edit($person);
+        $viewData = clone $person;
+        $viewData->companies = $this->companyService->getAll();
+        return parent::edit($viewData);
     }
 
-    public function updatePerson(StorePersonRequest $request, int $id) 
+    public function updatePerson(StorePersonRequest $request, int $id): RedirectResponse
     {
-        $this->service->update($request->only([
+        $person = $this->service->update($request->only([
             'full_name',
             'gender',
             'birthdate',
@@ -67,6 +73,9 @@ class PersonController extends CRUDController
             'address',
         ]), $id);
 
+        $company_id = intval(base64_decode($request->input('company')));
+        $person->company()->associate($company_id);
+        $person->save();
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-updated');
     }
 }

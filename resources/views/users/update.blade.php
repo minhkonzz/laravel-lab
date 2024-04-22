@@ -34,7 +34,7 @@
                                 <x-input-label for="password" :value="__('Password')" />
                                 <x-text-input disabled readonly id="password" name="password" type="password" class="mt-1 block w-full" :value="$item->password" required autofocus autocomplete="password" />
                             </div>
-                            <div>
+                            <div class="flex items-center">
                                 <x-input-label for="roles" :value="__('Roles')" />
                                 <x-dropdown-search-checkbox :options="$item->roles" :selectedIds="$item->selectedRoleIds" />
                             </div>

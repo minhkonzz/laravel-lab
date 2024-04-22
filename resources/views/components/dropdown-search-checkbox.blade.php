@@ -35,11 +35,32 @@
             </div>
         </div>
         <ul class="px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200">
+            <script>
+                function onCheck(t, checkedCount, isClickCheckbox) 
+                {
+                    let newCount = checkedCount;
+                    if (isClickCheckbox) 
+                        return newCount + (t.checked ? 1 : -1);
+
+                    newCount += t.checked ? -1 : 1;
+                    t.checked = !t.checked;
+                    return newCount;
+                }
+            </script>
             @foreach ($options as $i => $option)
-                <li>
-                    <div x-data="{ isChecked: '{{ isset($selectedIds) && in_array($option['id'], $selectedIds) }}' }" class="flex items-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" x-on:click.prevent="checkedCount += isChecked ? -1 : 1; isChecked = !isChecked">
-                        <input x-bind:checked="isChecked" id="checkbox-item-{{ $i + 1 }}" type="checkbox" value="{{ $option['id'] }}" name="roles[]" class="w-4 h-4 rounded text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
-                        <label for="checkbox-item-{{ $i + 1 }}" class="w-full ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $option['role'] }}</label>
+                <li class="flex items-center cursor-pointer">
+                    <input
+                        @click="checkedCount = onCheck($event.target, checkedCount, true)"
+                        x-ref="cb{{ $i }}" 
+                        {{ isset($selectedIds) && in_array($option['id'], $selectedIds) ? 'checked' : '' }} 
+                        id="checkbox-item-{{ $i + 1 }}" 
+                        type="checkbox" 
+                        value="{{ $option['id'] }}" 
+                        name="selected[]" 
+                        class="w-4 h-4 rounded text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
+
+                    <div class="w-full ml-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" @click="checkedCount = onCheck($refs.cb{{ $i }}, checkedCount)">
+                        <span class="w-full ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $option['role'] }}</span>
                     </div>
                 </li>
             @endforeach

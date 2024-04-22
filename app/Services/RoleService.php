@@ -8,6 +8,6 @@ class RoleService extends BaseService
 {
     function __construct(RoleRepository $repository)
     {
-        $this->repository = $repository;
+        parent::__construct($repository);
     }
 }

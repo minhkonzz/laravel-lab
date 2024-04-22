@@ -8,6 +8,6 @@ class PersonService extends BaseService
 {
     function __construct(PersonRepository $repository)
     {
-        $this->repository = $repository;
+        parent::__construct($repository);
     }
 }

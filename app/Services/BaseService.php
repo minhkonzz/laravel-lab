@@ -24,12 +24,12 @@ abstract class BaseService
         return $this->repository->getById($id);
     }
 
-    public function create(array $data): Model
+    public function create(array $data): ?Model
     {
         return $this->repository->create($data);
     }
 
-    public function update(array $data, int $id): bool
+    public function update(array $data, int $id): ?Model
     {
         return $this->repository->update($data, $id);
     }

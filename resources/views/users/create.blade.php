@@ -35,7 +35,7 @@
                                 <x-input-error class="mt-2" :messages="$errors->get('password')" />
                             </div>
 
-                            <div>
+                            <div class="flex items-center">
                                 <x-input-label for="roles" :value="__('Roles')" />
                                 <x-dropdown-search-checkbox placeholder="select roles" :options="$roles" />
                             </div>

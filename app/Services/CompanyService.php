@@ -8,6 +8,6 @@ class CompanyService extends BaseService
 {
     function __construct(CompanyRepository $repository)
     {
-        $this->repository = $repository;
+        parent::__construct($repository);
     }
 }

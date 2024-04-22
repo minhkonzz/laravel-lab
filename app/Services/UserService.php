@@ -8,6 +8,6 @@ class UserService extends BaseService
 {
     function __construct(UserRepository $repository)
     {
-        $this->repository = $repository;
+        parent::__construct($repository);
     }
 }

@@ -25,4 +25,14 @@ class CompanyController extends CRUDController
     {
         return parent::edit($company);
     }
+
+    public function getPersons(Company $company)
+    {
+        $persons = [
+            ['id' => 'p1', 'full_name' => 'Anh Pham', 'birthdate' => '29-01-2001', 'phone_number' => '0967105498'],
+            ['id' => 'p2', 'full_name' => 'Tuan Trung', 'birthdate' => '13-02-2001', 'phone_number' => '0966102485']
+        ];
+
+        return response()->json($company->person);
+    }
 }

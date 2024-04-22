@@ -9,32 +9,24 @@
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                 </div>
-
+                @php
+                    $navLinks = [
+                        ['route' => 'users'     ,  'title' => 'Users'],
+                        ['route' => 'persons'   ,  'title' => 'Persons'],
+                        ['route' => 'roles'     ,  'title' => 'Roles'],
+                        ['route' => 'countries' ,  'title' => 'Countries'],
+                        ['route' => 'companies' ,  'title' => 'Companies'],
+                        ['route' => 'projects'  ,  'title' => 'Projects'],
+                        ['route' => 'tasks'     ,  'title' => 'Tasks']                        
+                    ];
+                @endphp
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('users.index')" :active="request()->routeIs('users')">
-                        {{ __('Users') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('persons.index')" :active="request()->routeIs('persons')">
-                        {{ __('Persons') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('roles.index')" :active="request()->routeIs('roles')">
-                        {{ __('Roles') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('countries.index')" :active="request()->routeIs('countries')">
-                        {{ __('Countries') }}
-                    </x-nav-link>
-
-                    <x-nav-link :href="route('companies.index')" :active="request()->routeIs('companies')">
-                        {{ __('Companies') }}
-                    </x-nav-link>
+                    @foreach ($navLinks as $link)
+                        <x-nav-link :href="route($link['route'] . '.index')" :active="request()->routeIs($link['route'])">
+                            {{ __($link['title']) }}
+                        </x-nav-link>
+                    @endforeach
                 </div>
             </div>
 

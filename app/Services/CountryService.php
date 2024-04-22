@@ -8,6 +8,6 @@ class CountryService extends BaseService
 {
     function __construct(CountryRepository $repository)
     {
-        $this->repository = $repository;
+        parent::__construct($repository);
     }
 }

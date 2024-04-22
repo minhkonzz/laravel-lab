@@ -18,6 +18,6 @@ class Company extends Model
 
     public function person() 
     {
-        $this->hasMany(Person::class);
+        return $this->hasMany(Person::class);
     }
 }

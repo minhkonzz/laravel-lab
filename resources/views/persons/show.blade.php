@@ -53,6 +53,15 @@
                                 {{ $item->address }}
                             </p>
                         </div>
+                        <div class="mt-8">
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                {{ __('Company') }}
+                            </h2>
+
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                                {{ $item->company->name }}
+                            </p>
+                        </div>
                         
                     </section>
                 </div>
