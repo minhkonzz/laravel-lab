@@ -1,10 +1,10 @@
-@props(['placeholder', 'options', 'selectedIds'])
+@props(['class', 'placeholder', 'options', 'selectedIds', 'inputName'])
 
-<div x-data="{ open: false, checkedCount: {{ count($selectedIds) }} }">
+<div class="{{ isset($class) ? $class : '' }}" x-data="{ open: false, checkedCount: {{ isset($selectedIds) ? count($selectedIds) : 0 }} }">
     <button  
         @click="open = ! open"
         id="dropdownSearchButton" 
-        class="relative ml-4 text-black border-gray-300 border-2 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-blue-800" type="button">
+        class="max-h-[38px] relative text-black border-gray-300 border-2 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-blue-800" type="button">
         
         <span x-text="checkedCount + ' selected'"></span>
         <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
@@ -22,7 +22,6 @@
         @click.outside="open = false" 
         style="display: none;" 
         class="absolute z-10 ml-48 mt-[-100px] bg-white rounded-lg shadow-lg w-60 dark:bg-gray-700">
-
         <div class="p-3">
             <label for="input-group-search" class="sr-only">Search</label>
             <div class="relative">
@@ -47,20 +46,21 @@
                     return newCount;
                 }
             </script>
-            @foreach ($options as $i => $option)
+            @foreach ($options as $id => $name)
+                @php $key = base64_encode($id . $name)  @endphp 
                 <li class="flex items-center cursor-pointer">
                     <input
                         @click="checkedCount = onCheck($event.target, checkedCount, true)"
-                        x-ref="cb{{ $i }}" 
-                        {{ isset($selectedIds) && in_array($option['id'], $selectedIds) ? 'checked' : '' }} 
-                        id="checkbox-item-{{ $i + 1 }}" 
+                        x-ref="cb{{ $key }}" 
+                        {{ isset($selectedIds) && in_array($id, $selectedIds) ? 'checked' : '' }} 
+                        id="checkbox-item-{{ $key }}" 
                         type="checkbox" 
-                        value="{{ $option['id'] }}" 
-                        name="selected[]" 
+                        value="{{ $id }}" 
+                        name="{{ $inputName }}[]" 
                         class="w-4 h-4 rounded text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-700 dark:focus:ring-offset-gray-700 focus:ring-2 dark:bg-gray-600 dark:border-gray-500">
 
-                    <div class="w-full ml-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" @click="checkedCount = onCheck($refs.cb{{ $i }}, checkedCount)">
-                        <span class="w-full ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $option['role'] }}</span>
+                    <div class="w-full ml-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" @click="checkedCount = onCheck($refs.cb{{ $key }}, checkedCount)">
+                        <span class="w-full ms-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $name }}</span>
                     </div>
                 </li>
             @endforeach

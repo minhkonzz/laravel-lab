@@ -8,6 +8,9 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
+
+use App\Models\Company;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,67 +32,102 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+Route::middleware(['web', 'auth'])->group(function () {
 
-    Route::get('/countries', [CountryController::class, 'index'])->name('countries.index');
-    Route::get('/countries/{country}', [CountryController::class,'showCountry'])->name('countries.show');
-    Route::get('/countries/{country}/edit', [CountryController::class, 'editCountry'])->name('countries.edit');
+    Route::group(['prefix' => 'countries', 'as' => 'countries.'], function () {
+        Route::get('/', [CountryController::class, 'index'])->name('index');
+        Route::get('/{country}', [CountryController::class,'showCountry'])->name('show');
+        Route::get('/{country}/edit', [CountryController::class, 'editCountry'])->name('edit');
+        Route::post('/countries', [CountryController::class, 'storeCountry'])->name('store');
+        Route::put('/{country}', [CountryController::class, 'updateCountry'])->name('update');
+        Route::delete('/{country}', [CountryController::class, 'destroy'])->name('destroy');
+    });
+
     Route::get('/create-country', [CountryController::class, 'create'])->name('countries.create');
-    Route::post('/countries', [CountryController::class, 'storeCountry'])->name('countries.store');
-    Route::put('/countries/{country}', [CountryController::class, 'updateCountry'])->name('countries.update');
-    Route::delete('/countries/{country}', [CountryController::class, 'destroy'])->name('countries.destroy');
 
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::get('/users/{user}', [UserController::class, 'showUser'])->name('users.show');
-    Route::get('/users/{user}/edit', [UserController::class, 'editUser'])->name('users.edit');
+    Route::group(['prefix' => 'users', 'as' => 'users.'], function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/{user}', [UserController::class, 'showUser'])->name('show');
+        Route::get('/{user}/edit', [UserController::class, 'editUser'])->name('edit');
+        Route::post('/', [UserController::class, 'store'])->name('store');
+        Route::put('/{user}', [UserController::class, 'updateUser'])->name('update');
+        Route::delete('/{user}', [UserController::class, 'destroyUser'])->name('destroy');
+    });
+
     Route::get('/create-user', [UserController::class, 'create'])->name('users.create');
-    Route::post('/users', [UserController::class, 'storeUser'])->name('users.store');
-    Route::put('/users/{user}', [UserController::class, 'updateUser'])->name('users.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
-    Route::get('/persons', [PersonController::class, 'index'])->name('persons.index');
-    Route::get('/persons/{person}', [PersonController::class, 'showPerson'])->name('persons.show');
-    Route::get('/persons/{person}/edit', [PersonController::class, 'editPerson'])->name('persons.edit');
+    Route::group(['prefix' => 'persons', 'as' => 'persons.'], function () {
+        Route::get('/', [PersonController::class, 'index'])->name('index');
+        Route::get('/{person}', [PersonController::class,'showPerson'])->name('show');
+        Route::get('/{person}/edit', [PersonController::class, 'editPerson'])->name('edit');
+        Route::post('/', [PersonController::class,'store'])->name('store');
+        Route::put('/{person}', [PersonController::class, 'updatePerson'])->name('update');
+        Route::delete('/{person}', [PersonController::class, 'destroyPerson'])->name('destroy');
+    });
+
     Route::get('/create-person', [PersonController::class, 'create'])->name('persons.create');
-    Route::post('/persons', [PersonController::class, 'storePerson'])->name('persons.store');
-    Route::put('/persons/{person}', [PersonController::class, 'updatePerson'])->name('persons.update');
-    Route::delete('/persons/{person}', [PersonController::class, 'destroy'])->name('persons.destroy');
 
-    Route::get('/companies', [CompanyController::class, 'index'])->name('companies.index');
-    Route::get('/companies/{company}', [CompanyController::class, 'showCompany'])->name('companies.show');
-    Route::get('/companies/{company}/edit', [CompanyController::class, 'editCompany'])->name('companies.edit');
-    Route::get('/companies/{company}/persons', [CompanyController::class, 'getPersons']);
+    Route::group(['prefix' => 'companies', 'as' => 'companies.'], function () {
+        Route::get('/', [CompanyController::class, 'index'])->name('index');
+        Route::get('/{company}', [CompanyController::class, 'showCompany'])->name('show');
+        Route::get('/{company}/edit', [CompanyController::class, 'editCompany'])->name('edit');
+        Route::get('/{company}/persons', [CompanyController::class, 'getPersons']);
+        Route::post('/', [CompanyController::class, 'store'])->name('store')->can('create', Company::class);
+        Route::put('/{company}', [CompanyController::class, 'updateCompany'])->name('update');
+        Route::delete('/{company}', [CompanyController::class, 'destroyCompany'])->name('destroy');
+    });
+
     Route::get('/create-company', [CompanyController::class, 'create'])->name('companies.create');
-    Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
-    Route::put('/companies/{company}', [CompanyController::class, 'update'])->name('companies.update');
-    Route::delete('/companies/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy');
+    Route::post('/companies/{company}/departments', [CompanyController::class, 'storeOrUpdateDepartment'])->name('departments.store');
+    Route::get('/companies/{company}/create-department', [CompanyController::class, 'createDepartment'])->name('departments.create');
 
-    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
-    Route::get('/roles/{role}', [RoleController::class, 'showRole'])->name('roles.show');
-    Route::get('/roles/{role}/edit', [RoleController::class, 'editRole'])->name('roles.edit');
+    Route::group(['prefix' => 'departments', 'as' => 'departments.'], function () {
+        Route::get('/{department}/edit', [CompanyController::class, 'editDepartment'])->name('edit');
+        Route::put('/{department}', [CompanyController::class, 'storeOrUpdateDepartment'])->name('update');
+        Route::delete('/{department}', [CompanyController::class, 'destroyDepartment'])->name('destroy');
+    });
+
+    Route::group(['prefix' => 'roles', 'as' => 'roles.'], function () {
+        Route::get('/', [RoleController::class, 'index'])->name('index');
+        Route::get('/{role}', [RoleController::class,'showRole'])->name('show');
+        Route::get('/{role}/edit', [RoleController::class, 'editRole'])->name('edit');
+        Route::post('/', [RoleController::class,'store'])->name('store');
+        Route::put('/{role}', [RoleController::class, 'updateRole'])->name('update');
+        Route::delete('/{role}', [RoleController::class, 'destroyRole'])->name('destroy');
+    });
+
     Route::get('/create-role', [RoleController::class, 'create'])->name('roles.create');
-    Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
-    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
 
-    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
-    Route::get('/projects/{project}', [ProjectController::class, 'showProject'])->name('projects.show');
-    Route::get('/projects/{project}/edit', [ProjectController::class, 'editProject'])->name('projects.edit');
+    Route::group(['prefix' => 'projects', 'as' => 'projects.'], function () {
+        Route::get('/', [ProjectController::class, 'index'])->name('index');
+        Route::get('/{project}', [ProjectController::class,'showProject'])->name('show');
+        Route::get('/{project}/edit', [ProjectController::class, 'editProject'])->name('edit');
+        Route::get('/{project}/persons', [ProjectController::class, 'getPersons']);
+        Route::post('/', [ProjectController::class,'store'])->name('store');
+        Route::put('/{project}', [ProjectController::class, 'updateProject'])->name('update');
+        Route::delete('/{project}', [ProjectController::class, 'destroyProject'])->name('destroy');
+    });
+
     Route::get('/create-project', [ProjectController::class, 'create'])->name('projects.create');
-    Route::post('/projects', [ProjectController::class, 'storeProject'])->name('projects.store');
-    Route::put('/projects/{project}', [ProjectController::class, 'updateProject'])->name('projects.update');
-    Route::delete('/projects/{project}', [ProjectController::class, 'destroyProject'])->name('projects.destroy');
 
-    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
-    Route::get('/tasks/{task}', [TaskController::class, 'showTask'])->name('tasks.show');
-    Route::get('/tasks/{task}/edit', [TaskController::class, 'editTask'])->name('tasks.edit');
+    Route::group(['prefix' => 'tasks', 'as' => 'tasks.'], function () {
+        Route::get('/', [TaskController::class, 'index'])->name('index');
+        Route::get('/{task}', [TaskController::class, 'showTask'])->name('show');
+        Route::get('/{task}/edit', [TaskController::class, 'editTask'])->name('edit');
+        Route::post('/', [TaskController::class, 'store'])->name('store');
+        Route::put('/{task}', [TaskController::class, 'updateTask'])->name('update');
+        Route::delete('/{task}', [TaskController::class, 'destroyTask'])->name('destroy');
+    });
+
     Route::get('/create-task', [TaskController::class, 'create'])->name('tasks.create');
-    Route::post('/tasks', [TaskController::class, 'storeTask'])->name('tasks.store');
-    Route::put('/tasks/{task}', [TaskController::class, 'updateTask'])->name('tasks.update');
-    Route::delete('/tasks/{task}', [TaskController::class, 'destroyTask'])->name('tasks.destroy');
+    Route::get('/tasks-export', [TaskController::class, 'export'])->name('tasks.export');
+    Route::get('/tasks-filter', [TaskController::class, 'filter'])->name('tasks.filter');
+
+    Route::group(['prefix' => 'profile', 'as' => 'profile.'], function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+    });
 });
 
 require __DIR__.'/auth.php';

@@ -37,7 +37,7 @@
 
                             <div class="flex items-center">
                                 <x-input-label for="roles" :value="__('Roles')" />
-                                <x-dropdown-search-checkbox placeholder="select roles" :options="$roles" />
+                                <x-dropdown-search-checkbox placeholder="Select roles" :options="$roles" inputName="roles" />
                             </div>
                             <div class="flex items-center gap-4">
                                 <x-primary-button>{{ __('Save') }}</x-primary-button>

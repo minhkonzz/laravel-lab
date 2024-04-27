@@ -29,13 +29,13 @@ abstract class BaseService
         return $this->repository->create($data);
     }
 
-    public function update(array $data, int $id): ?Model
+    public function update(array $data, Model $model): ?Model
     {
-        return $this->repository->update($data, $id);
+        return $this->repository->update($data, $model);
     }
 
-    public function delete(int $id): bool
+    public function delete(Model $model): bool
     {
-        return $this->repository->delete($id);
+        return $this->repository->delete($model);
     }
 }

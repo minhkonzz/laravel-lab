@@ -1,10 +1,18 @@
-@props(['placeholder', 'options', 'selectedId', 'selectedName', 'onSelect'])
+@props([
+    'class',
+    'placeholder', 
+    'inputName', 
+    'options', 
+    'selectedId', 
+    'selectedName', 
+    'onSelect'
+])
 
-<div x-data="{ open: false, selectedName: '{{ isset($selectedName) ? $selectedName : $placeholder }}' }">
+<div class="{{ isset($class) ? $class : '' }}" x-data="{ open: false, selectedName: '{{ isset($selectedName) && !empty($selectedName) ? $selectedName : $placeholder }}' }">
     <button  
         @click="open = ! open;"
         id="dropdownSearchButton" 
-        class="relative ml-4 text-black border-gray-300 border-2 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-blue-800" type="button">
+        class="relative text-black border-gray-300 border-2 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:focus:ring-blue-800" type="button">
         
         <span x-text="selectedName"></span>
         <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
@@ -35,11 +43,14 @@
             </div>
         </div>
         <ul class="px-3 pb-3 overflow-y-auto text-sm text-gray-700 dark:text-gray-200">
-            @foreach ($options as $i => $option)
+            @foreach (array_keys($options) as $i => $k)
+                @php 
+                    $v = $options[$k];    
+                @endphp
                 <li class="cursor-pointer flex items-center ps-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600" 
-                    @click="selectedName = '{{ $option['name'] }}'; {{ isset($onSelect) ? $onSelect . '(' . $option['id'] . ')' : '' }}">
-                    <input {{ isset($selectedId) && $selectedId === $option['id'] ? 'checked' : '' }} id="radio-item-{{ $i + 1 }}" type="radio" name="company" value="{{ base64_encode($option['id']) }}">
-                    <label for="radio-item-{{ $i + 1 }}" class="py-2 ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $option['name'] }}</label>
+                    @click="selectedName = '{{ $v }}'; {{ isset($onSelect) ? $onSelect . '(' . $k . ')' : '' }}">
+                    <input {{ isset($selectedId) && $selectedId == $k ? 'checked' : '' }} id="radio-item-{{ $i + 1 }}" type="radio" name="{{ $inputName }}" value="{{ base64_encode($k) }}">
+                    <label for="radio-item-{{ $i + 1 }}" class="py-2 ml-2 text-sm font-medium text-gray-900 rounded dark:text-gray-300">{{ $v }}</label>
                 </li>
             @endforeach
         </ul>

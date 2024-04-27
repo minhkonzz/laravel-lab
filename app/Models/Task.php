@@ -12,13 +12,22 @@ class Task extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'description',
+        'start_time',
+        'end_time',
+        'priority',
+        'status'
+    ];
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
-    public function person(): HasMany
+    public function person(): BelongsTo
     {
-        return $this->hasMany(Person::class);
+        return $this->belongsTo(Person::class);
     }
 }

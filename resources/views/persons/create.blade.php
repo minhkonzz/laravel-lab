@@ -47,7 +47,7 @@
 
                             <div class="flex items-center">
                                 <x-input-label for="company" :value="__('Company')" />
-                                <x-dropdown-search placeholder="Select company" :options="$companies" />
+                                <x-dropdown-search placeholder="Select company" inputName="company" :options="$companies" />
                             </div>
 
                             <div class="flex items-center gap-4">

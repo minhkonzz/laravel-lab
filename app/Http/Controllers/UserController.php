@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\View\View;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Validator;
+use App\Helpers\ArrayHelper;
 use App\Services\UserService;
 use App\Services\PersonService;
 use App\Services\RoleService;
@@ -17,32 +20,53 @@ class UserController extends CRUDController
     const VIEW_NAME = 'users';
 
     function __construct (
-        UserService $userService, 
+        UserService $service, 
         PersonService $personService,
         RoleService $roleService
     ) 
     {
-        parent::__construct($userService, self::VIEW_NAME);
+        parent::__construct($service, self::VIEW_NAME);
         $this->personService = $personService;
         $this->roleService = $roleService;
     }
 
+    public function index(): View
+    {
+        $users = User::paginate(2);
+        return view(self::VIEW_NAME.'.'.'index', compact('users'));
+    }
+
     public function create(): View
     {
-        $roles = $this->roleService->getAll();
+        $roles = ArrayHelper::handle1($this->roleService->getAll(), ['id', 'role']);
         return view(self::VIEW_NAME.'.'.'create', compact('roles'));
     }
 
-    public function storeUser(StoreUserRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {   
-        $user = $this->service->create(
-            $request->only(['name', 'email', 'password'])
-        );
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8'
+        ]);
 
-        $person = new Person();
+        if ($validator->fails())
+        {
+            return back()->withErrors($validator)->withInput();
+        }
 
-        $user->roles()->attach($request->input('selected'));
+        $validated = $validator->validated();
+
+        $user = $this->service->create([
+            'name'     => strip_tags($validated['name']),
+            'email'    => strip_tags($validated['email']),
+            'password' => strip_tags($validated['password'])
+        ]);
+
+        $person = new Person;
         $user->person()->save($person);
+        $user->roles()->attach($request->input('roles'));
+        
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-created');
     }
 
@@ -54,16 +78,39 @@ class UserController extends CRUDController
     public function editUser(User $user): View
     {
         $viewData = clone $user; 
-        $viewData->roles = $this->roleService->getAll();
+        $viewData->roles = ArrayHelper::handle1($this->roleService->getAll(), ['id', 'role']);
         $viewData->selectedRoleIds = array_column($user->roles->toArray(), 'id');
         return parent::edit($viewData);
     }
 
-    public function updateUser(UpdateUserRequest $request, int $id): RedirectResponse
+    public function updateUser(Request $request, User $user): RedirectResponse
     {
-        $user = $this->service->update($request->only(['name', 'email']), $id);
-        $selectedRoles = $request->input('selected');
-        $user->roles()->sync($selectedRoles);
+        $validator = Validator::make($request->all(), [
+            'name'  => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users' 
+        ]);
+
+        if ($validator->fails())
+        {
+            return back()->withErrors($validator)->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        $user = $this->service->update([
+            'name'  => strip_tags($validated['name']),
+            'email' => strip_tags($validated['email'])
+        ], $user);
+
+        $roles = $request->input('roles');
+        $user->roles()->sync($roles);
+
         return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-updated');
+    }
+
+    public function destroyUser(User $user): RedirectResponse
+    {
+        $this->service->delete($user);
+        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-deleted');
     }
 }

@@ -2,7 +2,6 @@
     <x-slot name="header">
         <a href="{{ route('users.index') }}">&larr; Back</a>
     </x-slot>
-
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
@@ -36,21 +35,11 @@
                             </div>
                             <div class="flex items-center">
                                 <x-input-label for="roles" :value="__('Roles')" />
-                                <x-dropdown-search-checkbox :options="$item->roles" :selectedIds="$item->selectedRoleIds" />
+                                <x-dropdown-search-checkbox class="ml-4" :options="$item->roles" :selectedIds="$item->selectedRoleIds" inputName="roles" />
                             </div>
 
                             <div class="flex items-center gap-4">
                                 <x-primary-button>{{ __('Update') }}</x-primary-button>
-
-                                @if (session('status') === 'user-updated')
-                                    <p
-                                        x-data="{ show: true }"
-                                        x-show="show"
-                                        x-transition
-                                        x-init="setTimeout(() => show = false, 2000)"
-                                        class="text-sm text-gray-600 dark:text-gray-400"
-                                    >{{ __('Updated user.') }}</p>
-                                @endif
                             </div>
                         </form>
                     </section>
@@ -58,5 +47,4 @@
             </div>
         </div>
     </div>
-
 </x-app-layout>
