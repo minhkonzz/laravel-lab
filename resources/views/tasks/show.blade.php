@@ -7,62 +7,20 @@
             <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
                 <div class="max-w-xl">
                     <section>
-                        <div>
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Name') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->name }}
-                            </p>
-                        </div>
-                        <div class="mt-8">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Description') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->description }}
-                            </p>
-                        </div>
-                        <div class="mt-8">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Start time') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->start_time }}
-                            </p>
-                        </div>
-                        <div class="mt-8">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('End time') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->end_time }}
-                            </p>
-                        </div> 
-                        <div class="mt-8">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Priority') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->priorities[$item->priority] }}
-                            </p>
-                        </div> 
-                        <div class="mt-8">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Status') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->statuses[$item->status] }}
-                            </p>
-                        </div>    
-                        <div class="mt-8">
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Assignee') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ $item->person->full_name }}
-                            </p>
-                        </div>     
+                        @foreach([
+                            ['title' => 'Name', 'value' => $viewData->name],
+                            ['title' => 'Description', 'value' => $viewData->description],
+                            ['title' => 'Start time', 'value' => $viewData->start_time],
+                            ['title' => 'End time', 'value' => $viewData->end_time],
+                            ['title' => 'Priority', 'value' => $viewData->priorities[$viewData->priority]],
+                            ['title' => 'Status', 'value' => $viewData->statuses[$viewData->status]],
+                            ['title' => 'Assignee', 'value' => $viewData->person->full_name]
+                        ] as $attribute)
+                            <div class="mt-8">
+                                <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ __($attribute['title']) }}</h2>
+                                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ $attribute['value'] }}</p>
+                            </div>
+                        @endforeach
                     </section>
                 </div>
             </div>

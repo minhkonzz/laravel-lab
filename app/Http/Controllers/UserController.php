@@ -7,32 +7,32 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\ArrayHelper;
-use App\Services\UserService;
-use App\Services\PersonService;
-use App\Services\RoleService;
+use App\Services\Interfaces\UserServiceInterface;
+use App\Services\Interfaces\PersonServiceInterface;
+use App\Services\Interfaces\RoleServiceInterface;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use App\Models\Person;
 
-class UserController extends CRUDController 
+class UserController extends Controller 
 {
     const VIEW_NAME = 'users';
 
-    function __construct (
-        UserService $service, 
-        PersonService $personService,
-        RoleService $roleService
+    function __construct(
+        UserServiceInterface   $service, 
+        PersonServiceInterface $personService,
+        RoleServiceInterface   $roleService
     ) 
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
         $this->personService = $personService;
         $this->roleService = $roleService;
     }
 
     public function index(): View
     {
-        $users = User::paginate(2);
+        $users = $this->service->getAllPaginated();
         return view(self::VIEW_NAME.'.'.'index', compact('users'));
     }
 
@@ -44,73 +44,53 @@ class UserController extends CRUDController
 
     public function store(Request $request): RedirectResponse
     {   
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8'
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $user = $this->service->storeUser($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-created');
         }
-
-        $validated = $validator->validated();
-
-        $user = $this->service->create([
-            'name'     => strip_tags($validated['name']),
-            'email'    => strip_tags($validated['email']),
-            'password' => strip_tags($validated['password'])
-        ]);
-
-        $person = new Person;
-        $user->person()->save($person);
-        $user->roles()->attach($request->input('roles'));
-        
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-created');
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
 
-    public function showUser(User $user): View
+    public function show(User $user): View
     {
-        return parent::show($user);
+        return view(self::VIEW_NAME.'.'.'show', compact('user'));
     }
 
-    public function editUser(User $user): View
+    public function edit(User $user): View
     {
         $viewData = clone $user; 
         $viewData->roles = ArrayHelper::handle1($this->roleService->getAll(), ['id', 'role']);
         $viewData->selectedRoleIds = array_column($user->roles->toArray(), 'id');
-        return parent::edit($viewData);
+        return view(self::VIEW_NAME.'.'.'update', compact('viewData'));
     }
 
-    public function updateUser(Request $request, User $user): RedirectResponse
+    public function update(Request $request, User $user): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'  => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users' 
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $user = $this->service->updateUser($user, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-updated');
         }
-
-        $validated = $validator->validated();
-
-        $user = $this->service->update([
-            'name'  => strip_tags($validated['name']),
-            'email' => strip_tags($validated['email'])
-        ], $user);
-
-        $roles = $request->input('roles');
-        $user->roles()->sync($roles);
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-updated');
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
 
-    public function destroyUser(User $user): RedirectResponse
+    public function destroy(User $user): RedirectResponse
     {
-        $this->service->delete($user);
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-deleted');
+        try
+        {
+            $deleted = $this->service->delete($user);
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'user-deleted');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 }

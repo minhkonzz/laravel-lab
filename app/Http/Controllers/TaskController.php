@@ -6,17 +6,17 @@ use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Helpers\ArrayHelper;
-use App\Services\TaskService;
-use App\Services\CompanyService;
-use App\Services\ProjectService;
+use App\Services\Interfaces\TaskServiceInterface;
+use App\Services\Interfaces\CompanyServiceInterface;
+use App\Services\Interfaces\ProjectServiceInterface;
 use App\Exports\TaskExport;
 use App\Models\Task;
 use App\Models\Person;
 
-class TaskController extends CRUDController
+class TaskController extends Controller
 {
     const VIEW_NAME = 'tasks';
 
@@ -34,19 +34,19 @@ class TaskController extends CRUDController
     ];
 
     function __construct (
-        TaskService $service, 
-        CompanyService $companyService, 
-        ProjectService $projectService
+        TaskServiceInterface    $service, 
+        CompanyServiceInterface $companyService, 
+        ProjectServiceInterface $projectService
     )
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
         $this->companyService = $companyService;
         $this->projectService = $projectService;
     }
 
     public function index(): View
     {
-        $tasks = Task::paginate(2);
+        $tasks = $this->service->getAllPaginated();
         $companies = ArrayHelper::handle1($this->companyService->getAll());
         $projects = ArrayHelper::handle1($this->projectService->getAll());
 
@@ -71,135 +71,78 @@ class TaskController extends CRUDController
 
     public function store(Request $request): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'          => 'required|string',
-            'description'   => 'required|string',
-            'start_time'    => 'required|date',
-            'end_time'      => 'required|date',
-            'priority'      => 'required|string',
-            'status'        => 'required|string'
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $task = $this->service->storeTask($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'task-created');
         }
-
-        $validated = $validator->validated();
-
-        $task = Task::make([
-            'name'         => strip_tags($validated['name']),
-            'start_time'   => strip_tags($validated['start_time']), 
-            'end_time'     => strip_tags($validated['end_time']),
-            'priority'     => base64_decode(strip_tags($validated['priority'])),
-            'status'       => base64_decode(strip_tags($validated['status'])),
-            'description'  => strip_tags($validated['description'])
-        ]);
-
-        $project_id = intval(base64_decode($request->input('project')));
-        $person_id  = intval($request->input('person'));
-
-        $task->project()->associate($project_id);
-        $task->person()->associate($person_id);
-        $task->save();
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'task-created');
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
     
-    public function editTask(Task $task): View
+    public function edit(Task $task): View
     {
         $viewData = clone $task;
         $viewData->projects = ArrayHelper::handle1($this->projectService->getAll());
         $viewData->priorities = self::$priorities;
         $viewData->statuses = self::$statuses;
-        return parent::edit($viewData);
+        return view(self::VIEW_NAME.'.'.'update', compact('viewData'));
     }
 
-    public function showTask(Task $task): View
+    public function show(Task $task): View
     {
         $viewData = clone $task;
         $viewData->priorities = self::$priorities;
         $viewData->statuses = self::$statuses;
-        return parent::show($viewData);
+        return view(self::VIEW_NAME.'.'.'show', compact('viewData'));
     }
 
-    public function updateTask(Request $request, Task $task): RedirectResponse
+    public function update(Request $request, Task $task): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'         => 'required|string|max:255',
-            'description'  => 'required|string',
-            'start_time'   => 'required|date',
-            'end_time'     => 'required|date',
-            'priority'     => 'required|string',
-            'status'       => 'required|string'
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $task = $this->service->updateTask($task, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'task-updated');
         }
-
-        $validated = $validator->validated();
-
-        $task = $this->service->update([
-            'name'         =>  strip_tags($validated['name']),
-            'start_time'   =>  strip_tags($validated['start_time']), 
-            'end_time'     =>  strip_tags($validated['end_time']),
-            'priority'     =>  base64_decode(strip_tags($validated['priority'])),
-            'status'       =>  base64_decode(strip_tags($validated['status'])),
-            'description'  =>  strip_tags($validated['description'])
-        ], $task);
-
-        $project_id = intval(base64_decode($request->input('project')));
-
-        if (!empty($project_id))
+        catch (Exception $e)
         {
-            $task->project()->associate($project_id);
+            return back()->withErrors($e->getMessage())->withInput();
         }
-
-        $person_id  = intval($request->input('person'));
-
-        if (!empty($person_id))
-        {
-            $task->person()->associate($person_id);
-        }
-
-        $task->save();
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'task-updated');
     }
 
-    public function destroyTask(Task $task): RedirectResponse
+    public function destroy(Task $task): RedirectResponse
     {
-        $this->service->delete($task);
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'task-deleted');
+        try 
+        {
+            $deleted = $this->service->delete($task);
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'task-deleted');
+        }
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 
     public function filter(Request $request): View
     {
-        $tasks = DB::table('projects')
-            ->join('tasks', 'tasks.project_id', 'projects.id')
-            ->join('companies', 'projects.company_id', 'companies.id')
-            ->select('tasks.*');
-
-        if ($request->has('priorities')) {
-            $tasks = $tasks->whereIn('priority', $request->input('priorities'));
+        try
+        {
+            $companies = ArrayHelper::handle1($this->companyService->getAll());
+            $projects = ArrayHelper::handle1($this->projectService->getAll());
+            $res = $this->service->filter($request);
+            return view(self::VIEW_NAME.'.'.'index', array_merge($res, [
+                'companies'  => $companies,
+                'projects'   => $projects,
+                'priorities' => self::$priorities,
+                'statuses'   => self::$statuses,
+            ]));
         }
-
-        if ($request->has('statuses')) {
-            $tasks = $tasks->whereIn('status', $request->input('statuses'));
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage());
         }
-
-        if ($request->has('companies')) {
-            $tasks = $tasks->whereIn('companies.id', $request->input('companies'));
-        }
-
-        if ($request->has('projects')) {
-            $tasks = $tasks->whereIn('projects.id', $request->input('projects'));
-        }
-        
-        $tasks = $tasks->get();
-        return view(self::VIEW_NAME.'.'.'index', ['items' => $tasks]);
     }
 
     public function export()

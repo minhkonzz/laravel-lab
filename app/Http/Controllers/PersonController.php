@@ -6,32 +6,32 @@ use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
-use App\Services\PersonService;
-use App\Services\CompanyService;
-use App\Services\UserService;
+use App\Services\Interfaces\PersonServiceInterface;
+use App\Services\Interfaces\CompanyServiceInterface;
+use App\Services\Interfaces\UserServiceInterface;
 use App\Http\Requests\Person\StorePersonRequest;
 use App\Helpers\ArrayHelper;
 use App\Models\Person;
 use App\Models\User;
 
-class PersonController extends CRUDController
+class PersonController extends Controller
 {
     const VIEW_NAME = 'persons';
 
     function __construct(
-        PersonService $service, 
-        UserService $userService,
-        CompanyService $companyService
+        PersonServiceInterface  $service, 
+        UserServiceInterface    $userService,
+        CompanyServiceInterface $companyService
     )
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
         $this->userService = $userService;
         $this->companyService = $companyService;
     }
 
     public function index(): View
     {
-        $persons = Person::paginate(2);
+        $persons = $this->service->getAllPaginated();
         return view(self::VIEW_NAME.'.'.'index', compact('persons'));
     }
 
@@ -48,88 +48,52 @@ class PersonController extends CRUDController
     */
     public function store(Request $request): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'full_name'    => 'required|max:255|string',
-            'gender'       => 'required|string',
-            'birthdate'    => 'required|date',
-            'phone_number' => 'required|string',
-            'address'      => 'required|string'
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $person = $this->service->storePerson($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-created');
         }
-
-        $validated = $validator->validated();
-
-        $person = Person::make([
-            'full_name'     => strip_tags($validated['full_name']),
-            'gender'        => strip_tags($validated['gender']),
-            'birthdate'     => strip_tags($validated['birthdate']),
-            'phone_number'  => strip_tags($validated['phone_number']),
-            'address'       => strip_tags($validated['address'])
-        ]);
-
-        $user = $this->userService->create([
-            'name' => $person->full_name
-        ]);
-
-        $company_id = intval(base64_decode($request->input('company')));
-        $person->company()->associate($company_id);
-        $user->person()->save($person);
-        $user->save();
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-created');
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
 
-    public function showPerson(Person $person): View
+    public function show(Person $person): View
     {
-        return parent::show($person);
+        return view(self::VIEW_NAME.'.'.'show', compact('person'));
     }
 
-    public function editPerson(Person $person): View
+    public function edit(Person $person): View
     {
         $viewData = clone $person;
         $viewData->companies = ArrayHelper::handle1($this->companyService->getAll());
-        return parent::edit($viewData);
+        return view(self::VIEW_NAME.'.'.'update', compact('viewData'));
     }
 
-    public function updatePerson(Request $request, Person $person): RedirectResponse
+    public function update(Request $request, Person $person): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'full_name'    => 'required|max:255|string',
-            'gender'       => 'required|string',
-            'birthdate'    => 'required|date',
-            'phone_number' => 'required|string',
-            'address'      => 'required|string',
-        ]);
-
-        if ($validator->fails()) 
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $person = $this->service->updatePerson($person, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-updated');
         }
-
-        $validated = $validator->validated();
-        
-        $person = $this->service->update([
-            'full_name'    => strip_tags($validated['full_name']),
-            'gender'       => strip_tags($validated['gender']),
-            'birthdate'    => strip_tags($validated['birthdate']),
-            'phone_number' => strip_tags($validated['phone_number']),
-            'address'      => strip_tags($validated['address'])
-        ], $person);
-
-        $company_id = intval(base64_decode($request->input('company')));
-        $person->company()->associate($company_id);
-        $person->save();
-        
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'person-updated');
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
 
-    public function destroyPerson(Person $person): RedirectResponse
+    public function destroy(Person $person): RedirectResponse
     {
-        $this->userService->delete($person->user);
-        return back()->with('success', 'deleted-person');
+        try
+        {
+            $deleted = $this->userService->delete($person->user);
+            return back()->with('success', 'deleted-person');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 }

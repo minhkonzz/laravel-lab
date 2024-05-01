@@ -26,7 +26,7 @@
                         @endforeach</tr>
                     </thead>
                     <tbody>
-                        @foreach ($items as $country)
+                        @foreach ($countries as $country)
                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                                 <th scope="row" class="px-6 py-4">{{ $country->id }}</th>
                                 <td class="px-6 py-4">{{ $country->code }}</td>

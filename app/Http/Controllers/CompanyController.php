@@ -7,25 +7,33 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\ArrayHelper;
-use App\Services\CompanyService;
-use App\Services\DepartmentService;
+use App\Services\Interfaces\CompanyServiceInterface;
+use App\Services\Interfaces\DepartmentServiceInterface;
 use App\Models\Company;
 use App\Models\Department;
 
-class CompanyController extends CRUDController
+class CompanyController extends Controller
 {
     const VIEW_NAME = 'companies';
 
-    function __construct(CompanyService $service, DepartmentService $departmentService)
+    function __construct(
+        CompanyServiceInterface    $service, 
+        DepartmentServiceInterface $departmentService
+    )
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
         $this->departmentService = $departmentService;
     }
 
     public function index(): View
     {
-        $companies = Company::paginate(2);
+        $companies = $this->service->getAllPaginated();
         return view(self::VIEW_NAME.'.'.'index', compact('companies'));
+    }
+
+    public function create(): View
+    {
+        return view(self::VIEW_NAME.'.'.'create');
     }
     
     /**
@@ -34,9 +42,9 @@ class CompanyController extends CRUDController
      * @param  \App\Models\Company $company
      * @return \Illuminate\View\View
      */
-    public function showCompany(Company $company): View
+    public function show(Company $company): View
     {
-        return parent::show($company);
+        return view(self::VIEW_NAME.'.'.'show', compact('company'));
     }
 
     /**
@@ -47,26 +55,15 @@ class CompanyController extends CRUDController
      */
     public function store(Request $request): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'    => 'bail|required|max:255|unique:companies|alpha_dash',
-            'code'    => 'required|max:255|unique:companies',
-            'address' => 'required'
-        ]);
-
-        if ($validator->fails()) 
+        try 
         {
-            return back()->withErrors($validator)->withInput();
+            $company = $this->service->storeCompany($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'created-company');
+        } 
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage())->withInput();
         }
-
-        $validated = $validator->validated();
-
-        $company = $this->service->create([
-            'name'    => strip_tags($validated['name']),
-            'code'    => strip_tags($validated['code']),
-            'address' => strip_tags($validated['address']) 
-        ]);
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'created-company');
     }
 
     /**
@@ -75,17 +72,17 @@ class CompanyController extends CRUDController
      * @param  \App\Models\Company $company
      * @return \Illuminate\View\View
      */
-    public function editCompany(Company $company): View
+    public function edit(Company $company): View
     {
-        $viewData = clone $company;
-        $rootCompanyDepartments = $company->departments->whereNull('parent_id');
-        Department::buildDepartmentTree($rootCompanyDepartments, $company->departments);
-
-        $viewData->departments = [
-            'tree' => $rootCompanyDepartments,
-            'short' => ArrayHelper::handle1($company->departments)
-        ];
-        return parent::edit($viewData);
+        try
+        {
+            $viewData = $this->service->edit($company);
+            return view(self::VIEW_NAME.'.'.'update', compact('viewData'));   
+        }
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 
     /**
@@ -95,28 +92,17 @@ class CompanyController extends CRUDController
      * @param  Company  $company
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function updateCompany(Request $request, Company $company): RedirectResponse
+    public function update(Request $request, Company $company): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name'    => 'bail|required|max:255|unique:companies|alpha_dash',
-            'code'    => 'required|max:255|unique:companies',
-            'address' => 'required'
-        ]);
-
-        if ($validator->fails()) 
+        try 
         {
-            return back()->withErrors($validator)->withInput();
+            $company = $this->service->updateCompany($company, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'updated-company');
+        } 
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage())->withInput();
         }
-
-        $validated = $validator->validated();
-
-        $company = $this->service->update([
-            'name'    => strip_tags($validated['name']),
-            'code'    => strip_tags($validated['code']),
-            'address' => strip_tags($validated['address']) 
-        ], $company);
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'updated-company');
     }
 
     /**
@@ -125,10 +111,18 @@ class CompanyController extends CRUDController
      * @param  \App\Models\Company $company
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroyCompany(Company $company): RedirectResponse
+    public function destroy(Company $company): RedirectResponse
     {
-        $this->service->delete($company);
-        return back()->with('success', 'deleted-company');
+        try
+        {
+            $deleted = $this->service->delete($company);
+            return back()->with('success', 'deleted-company');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage());
+        }
+        
     }
 
     /**
@@ -154,49 +148,52 @@ class CompanyController extends CRUDController
     {
         $company_departments = $department->company->departments;
         $viewData = clone $department; 
-        $viewData->departments = ArrayHelper::handle1($company_departments->reject(function ($item) use ($department) {
-            return $item->id === $department->id;
-        }));
+        $allChildren = $department->allChildren()->toArray();
+        $viewData->departments = ArrayHelper::handle1($company_departments->reject(
+            function ($item) use ($department, $allChildren) 
+            {
+                return $item->id === $department->id || in_array($item->id, array_column($allChildren, 'id'));
+            }
+        ));
         return view(self::VIEW_NAME.'.'.'departments'.'.'.'update', compact('viewData'));
     }
 
     /**
-     * Store / Update specific department of company
+     * Store department of company
      * @param  \Illuminate\Http\Request $request
      * @param  \App\Models\Company $company
      * @return \Illuminate\View\View
     */
-    public function storeOrUpdateDepartment(Request $request, Company $company): View
+    public function storeDepartment(Request $request, Company $company): View
     {
-        $validator = Validator::make($request->all(), [
-            'name'              => 'required|max:255|unique:departments',
-            'code'              => 'required|max:255|unique:departments',
-            'parent_department' => 'integer'
-        ]);
-
-        if ($validator->fails())
+        try 
         {
-            return back()->withErrors($validator)->withInput();
+            $department = $this->departmentService->storeDepartment($company, $request->all());
+            return $this->edit($company);
         }
-
-        $validated = $validator->validated();
-        
-        $department = Department::make([
-            'code' => strip_tags($validated['code']),
-            'name' => strip_tags($validated['name'])
-        ]);      
-
-        $parent_department_id = intval(base64_decode($validated['parent_department']));
-        $department->company()->associate($company->id);
-
-        if ($parent_department_id) 
+        catch (Exception $e) 
         {
-            $department->parent()->associate($parent_department_id);
+            return back()->withErrors($e->getMessage())->withInput();
         }
-        
-        $department->save();
+    }
 
-        return $this->editCompany($company);
+    /**
+     * Update specific department of company
+     * @param  \Illuminate\Http\Request $request
+     * @param  \App\Models\Department $department
+     * @return \Illuminate\View\View
+    */
+    public function updateDepartment(Request $request, Department $department): View
+    {
+        try 
+        {
+            $department = $this->departmentService->updateDepartment($department, $request->all());
+            return $this->edit($department->company);
+        }
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
 
     /**
@@ -206,8 +203,15 @@ class CompanyController extends CRUDController
     */
     public function destroyDepartment(Department $department): RedirectResponse
     {
-        $this->departmentService->delete($department);
-        return back()->with('success', 'deleted-department');
+        try
+        {
+            $deleted = $this->departmentService->delete($department);
+            return back()->with('success', 'deleted-department');
+        }
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 
     public function getPersons(Company $company)

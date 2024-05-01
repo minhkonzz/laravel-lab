@@ -7,23 +7,26 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\ArrayHelper;
-use App\Services\ProjectService;
-use App\Services\CompanyService;
+use App\Services\Interfaces\ProjectServiceInterface;
+use App\Services\Interfaces\CompanyServiceInterface;
 use App\Models\Project;
 
-class ProjectController extends CRUDController
+class ProjectController extends Controller
 {
     const VIEW_NAME = 'projects';
 
-    function __construct(ProjectService $service, CompanyService $companyService)
+    function __construct(
+        ProjectServiceInterface $service, 
+        CompanyServiceInterface $companyService
+    )
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
         $this->companyService = $companyService;
     }
 
     public function index(): View
     {
-        $projects = Project::paginate(2);
+        $projects = $this->service->getAllPaginated();
         return view(self::VIEW_NAME.'.'.'index', compact('projects'));
     }
 
@@ -35,45 +38,23 @@ class ProjectController extends CRUDController
 
     public function store(Request $request): RedirectResponse
     {
-        $validato = Validator::make($request->all(), [
-            'code'        => 'required|string|unique:projects|alpha_dash',
-            'name'        => 'required|string',
-            'description' => 'required|string|' 
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $project = $this->service->storeProject($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-created');
         }
-
-        $validated = $validator->validated();
-
-        $project = Project::make([
-            'code'         =>  strip_tags($validated['code']),
-            'name'         =>  strip_tags($validated['company_name']),
-            'description'  =>  strip_tags($validated['description'])
-        ]);
-
-        $company_id = intval(base64_decode($request->input('company')));
-        
-        if (!empty($company_id))
+        catch (Exception $e)
         {
-            $project->company()->associate($company_id);
+            return back()->withErrors($e->getMessage())->withInput();
         }
-
-        $personIds = $request->input('person_ids', []);
-        $project->persons()->sync($personIds);
-        $project->save();
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-created');
     }
 
-    public function showProject(Project $project): View
+    public function show(Project $project): View
     {
-        return parent::show($project);
+        return view(self::VIEW_NAME.'.'.'show', compact('project'));
     }
 
-    public function editProject(Project $project): View
+    public function edit(Project $project): View
     {
         $viewData = clone $project;
         $viewData->companies = ArrayHelper::handle1($this->companyService->getAll(), ['id', 'name']);
@@ -81,46 +62,30 @@ class ProjectController extends CRUDController
         return view(self::VIEW_NAME.'.'.'update', compact('viewData'));
     }
 
-    public function updateProject(Request $request, Project $project): RedirectResponse
+    public function update(Request $request, Project $project): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'code'        => 'required|string|unique:projects|alpha_dash',
-            'name'        => 'required|string',
-            'description' => 'required|string',
-            'company'     => 'required'
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $project = $this->service->updateProject($project, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-updated');   
         }
-
-        $validated = $validator->validated();
-
-        $project = Project::make([
-            'code'        => strip_tags($validated['code']),
-            'name'        => strip_tags($validated['name']),
-            'description' => strip_tags($validated['description'])
-        ], $project);
-        
-        $company_id = intval(base64_decode($request->input('company')));
-        
-        if (!empty($company_id))
+        catch (Exception $e) 
         {
-            $project->company()->associate($company_id);
+            return back()->withErrors($e->getMessage())->withInput();
         }
-
-        $personIds = $request->input('person_ids', []);
-        $project->persons()->sync($personIds);
-        $project->save();
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-updated');
     }
 
-    public function destroyProject(Project $project): RedirectResponse
+    public function destroy(Project $project): RedirectResponse
     {
-        $this->service->delete($project);
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-deleted');
+        try 
+        {
+            $deleted = $this->service->delete($project);
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'project-deleted');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 
     public function getPersons(Project $project)

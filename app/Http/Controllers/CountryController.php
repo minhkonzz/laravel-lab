@@ -4,36 +4,76 @@ namespace App\Http\Controllers;
 
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
-use App\Services\CountryService;
+use App\Services\Interfaces\CountryServiceInterface;
 use App\Http\Requests\Country\StoreCountryRequest;
 use App\Models\Country;
 
-class CountryController extends CRUDController
+class CountryController extends Controller
 {
     const VIEW_NAME = 'countries';
 
-    function __construct(CountryService $service)
+    function __construct(CountryServiceInterface $service)
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
     }
 
-    public function storeCountry(StoreCountryRequest $request): RedirectResponse
+    public function index(): View
     {
-        return parent::store($request);
+        $countries = $this->service->getAll();
+        return view(self::VIEW_NAME.'.'.'index', compact('countries'));
     }
 
-    public function showCountry(Country $country): View
+    public function create(): View
     {
-        return parent::show($country);
+        return view(self::VIEW_NAME.'.'.'create');
     }
 
-    public function editCountry(Country $country): View
+    public function store(StoreCountryRequest $request): RedirectResponse
     {
-        return parent::edit($country);
+        try
+        {
+            $country = $this->service->store($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
     }
 
-    public function updateCountry(StoreCountryRequest $request, int $id): RedirectResponse
+    public function show(Country $country): View
     {
-        return parent::update($request, $id);
+        return view(self::VIEW_NAME.'.'.'show', compact('country'));
+    }
+
+    public function edit(Country $country): View
+    {
+        return view(self::VIEW_NAME.'.'.'update', compact('country'));
+    }
+
+    public function update(StoreCountryRequest $request, Country $country): RedirectResponse
+    {
+        try
+        {
+            $country = $this->service->update($country, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy(Country $country): RedirectResponse
+    {
+        try
+        {
+            $deleted = $this->service->delete($country);
+            return redirect()->route(self::VIEW_NAME.'.'.'index');
+        }
+        catch (Exception $e) 
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 }

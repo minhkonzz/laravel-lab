@@ -6,81 +6,75 @@ use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
-use App\Services\RoleService;
+use App\Services\Interfaces\RoleServiceInterface;
 use App\Models\Role;
 
-class RoleController extends CRUDController
+class RoleController extends Controller
 {
     const VIEW_NAME = 'roles';
 
-    function __construct(RoleService $service)
+    function __construct(RoleServiceInterface $service)
     {
-        parent::__construct($service, self::VIEW_NAME);
+        $this->service = $service;
     }
 
     public function index(): View
     {
-        $roles = Role::paginate(2);
+        $roles = $this->service->getAllPaginated();
         return view(self::VIEW_NAME.'.'.'index', compact('roles'));
+    }
+
+    public function create(): View
+    {
+        return view(self::VIEW_NAME.'.'.'create');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $validator = Validator::make($request->all(), [
-            'role'        => 'required|string|unique:roles|alpha_dash',
-            'description' => 'required|string'
-        ]);
-
-        if ($validator->fails())
+        try
         {
-            return back()->withErrors($validator)->withInput();
+            $role = $this->service->storeRole($request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'role-created');
         }
-
-        $validated = $validator->validated();
-
-        $role = $this->service->create([
-            'role'        => strip_tags($validated['role']),
-            'description' => strip_tags($validated['description']) 
-        ]);
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'role-created');
-    }
-
-    public function showRole(Role $role): View
-    {
-        return parent::show($role);
-    }
-
-    public function editRole(Role $role): View
-    {
-        return parent::edit($role);
-    }
-
-    public function updateRole(Request $request, Role $role): RedirectResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'role'        => 'required|string|unique:roles|alpha_dash',
-            'description' => 'required|string'
-        ]);
-
-        if ($validator->fails())
+        catch (Exception $e)
         {
-            return back()->withErrors($validator)->withInput();
+            return back()->withErrors($e->getMessage())->withInput();
         }
-
-        $validated = $validator->validated();
-
-        $role = $this->service->update([
-            'role'        =>  strip_tags($validated['role']),
-            'description' =>  strip_tags($validated['description'])
-        ], $role);
-
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'role-updated');
     }
 
-    public function destroyRole(Role $role): RedirectResponse
+    public function show(Role $role): View
     {
-        $this->service->delete($role);
-        return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'role-deleted');
+        return view(self::VIEW_NAME.'.'.'show', compact('role'));
+    }
+
+    public function edit(Role $role): View
+    {
+        return view(self::VIEW_NAME.'.'.'update', compact('role'));
+    }
+
+    public function update(Request $request, Role $role): RedirectResponse
+    {
+        try
+        {
+            $role = $this->service->updateRole($role, $request->all());
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'role-updated');
+        }
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage())->withInput();
+        }
+    }
+
+    public function destroy(Role $role): RedirectResponse
+    {
+        try
+        {
+            $deleted = $this->service->delete($role);
+            return redirect()->route(self::VIEW_NAME.'.'.'index')->with('success', 'role-deleted');
+        }   
+        catch (Exception $e)
+        {
+            return back()->withErrors($e->getMessage());
+        }
     }
 }

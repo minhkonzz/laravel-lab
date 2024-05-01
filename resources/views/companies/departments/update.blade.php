@@ -8,26 +8,23 @@
                 <div class="max-w-xl">
                     <section>
                         <header>
-                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                {{ __('Update department') }}
-                            </h2>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                                {{ __("Update department information") }}
-                            </p>
+                            <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">{{ __('Update department') }}</h2>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{{ __("Update department information") }}</p>
                         </header>
                         <form action="{{ route('departments.update', $viewData->id) }}" method="POST" class="mt-6 space-y-6">
                             @csrf
                             @method("PUT")
-                            <div>
-                                <x-input-label for="name" :value="__('Name')" />
-                                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="$viewData->name" required autofocus autocomplete="name" />
-                                <x-input-error class="mt-2" :messages="$errors->get('name')" />
-                            </div>
-                            <div>
-                                <x-input-label for="code" :value="__('Code')" />
-                                <x-text-input id="code" name="code" type="text" class="mt-1 block w-full" :value="$viewData->code" required autofocus autocomplete="code" />
-                                <x-input-error class="mt-2" :messages="$errors->get('code')" />
-                            </div>
+                            @foreach([
+                                ['name' => 'name', 'title' => 'Name', 'value' => $viewData->name],
+                                ['name' => 'code', 'title' => 'Code', 'value' => $viewData->code]
+                            ] as $field)
+                                <div>
+                                    <x-input-label :for="$field['name']" :value="__('Name')" />
+                                    <x-text-input :id="$field['name']" :name="$field['name']" type="text" class="mt-1 block w-full" :value="$field['value']" required autofocus :autocomplete="$field['name']" />
+                                    <x-input-error class="mt-2" :messages="$errors->get($field['name'])" />
+                                </div>
+                            @endforeach
+
                             @if (count($viewData->departments) > 0)
                                 <div>
                                     <x-input-label for="parent" :value="__('Parent department')" />
